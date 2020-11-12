@@ -12,8 +12,8 @@ const KEY = {
     SKY: '#72D7EE',
     TREE: '#005108',
     FOG: '#669999',
-    LIGHT: { road: '#6B6B6B', grass: '#10AA10', rumble: '#555555', lane: '#CCCCCC' },
-    DARK: { road: '#696969', grass: '#009A00', rumble: '#BBBBBB' },
+    LIGHT: { road: 'hotpink', grass: 'pink', rumble: '#555555', lane: '#CCCCCC' },
+    DARK: { road: 'deeppink', grass: 'lightpink', rumble: '#BBBBBB' },
     START: { road: 'white', grass: 'white', rumble: 'white' },
     FINISH: { road: 'black', grass: 'black', rumble: 'black' },
    };
@@ -24,7 +24,7 @@ const KEY = {
    };
    const ROAD = {
     LENGTH: { NONE: 0, SHORT: 25, MEDIUM: 50, LONG: 100 }, // num segments
-    HILL: { NONE: 0, LOW: 20, MEDIUM: 40, HIGH: 60 },
+    HILL: { NONE: 0, LOW: 20, MEDIUM: 40, HIGH: 200 },
     CURVE: { NONE: 0, EASY: 2, MEDIUM: 4, HARD: 6 },
    };
    const SPRITES = {

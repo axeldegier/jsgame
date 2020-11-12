@@ -1,6 +1,6 @@
 let width = 640;
 let height = 480;
-let fps = 60;
+let fps = 400;
 let step = 1 / fps;
 let skySpeed = 0.0005;
 let hillsSpeed = 0.001;
@@ -49,97 +49,98 @@ let hang = 0;
 let hangDelay = 50;
 let hangTimer = 0;
 let bikeSpriteSelector = 6;
+let lap = 1;
 
 window.addEventListener(
     'load',
     () => {
-      initialize();
+        initialize();
     },
     false
-   );
-   const initialize = async () => {
-       canvas = document.createElement('canvas');
-       canvas.width = width;
-       canvas.height = height;
-       canvas.style.backgroundColor = 'black';
-       document.getElementById('container').appendChild(canvas);
+);
+const initialize = async () => {
+    canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    canvas.style.backgroundColor = 'black';
+    document.getElementById('container').appendChild(canvas);
 
-       ctx = canvas.getContext('2d');
-       //ctx.imageSmoothingEnabled = false;
-       ctx.font = '20px Verdana';
+    ctx = canvas.getContext('2d');
+    //ctx.imageSmoothingEnabled = false;
+    ctx.font = '20px Verdana';
 
-       Keyboard.setHandlers();
-       Road.reset();
+    Keyboard.setHandlers();
+    Road.reset();
 
-       background = await Loader.loadImage('assets/img/backgrounds.png');
-       sprites = await Loader.loadImage('assets/img/sprites.png');
-       
-       console.log(background);
-       run();
+    background = await Loader.loadImage('assets/img/backgrounds.png');
+    sprites = await Loader.loadImage('assets/img/sprites.png');
 
+    console.log(background);
+    run();
+
+};
+const run = () => {
+    let now = null;
+    let last = Util.timestamp();
+    let dt = 0;
+    let gdt = 0;
+
+    const frame = () => {
+        now = Util.timestamp();
+        dt = Math.min(1, (now - last) / 1000);
+        gdt = gdt + dt;
+        while (gdt > step) {
+            gdt = gdt - step;
+            update(step);
+        }
+
+        render();
+        last = now;
+        requestAnimationFrame(frame);
     };
-   const run = () => {
-       let now = null;
-       let last = Util.timestamp();
-       let dt = 0;
-       let gdt = 0;
-
-       const frame = () => {
-           now = Util.timestamp();
-           dt = Math.min(1, (now - last) / 1000);
-           gdt = gdt + dt;
-           while (gdt > step) {
-               gdt = gdt - step;
-               update(step);
-           }
-           
-       render();
-       last = now;
-       requestAnimationFrame(frame);
-   };
 
     frame();
 
 };
 
-   const update = (dt) => {
-        const playerSegment = Segment.find(position + playerZ);
-        const speedPercent = speed / maxSpeed;
-        const dx = dt * 2 * speedPercent;
+const update = (dt) => {
+    const playerSegment = Segment.find(position + playerZ);
+    const speedPercent = speed / maxSpeed;
+    const dx = dt * 2 * speedPercent;
 
-        startPosition = position;
+    startPosition = position;
 
-        position = Util.increase(position, dt * speed, trackLength);
+    position = Util.increase(position, dt * speed, trackLength);
 
-        skyOffset = Util.increase(skyOffset, (skySpeed * playerSegment.curve * (position - startPosition)) / segmentLength, 1);
-        hillsOffset = Util.increase(hillsOffset, (hillsSpeed * playerSegment.curve * (position - startPosition)) / segmentLength, 1);
-        woodsOffset = Util.increase(woodsOffset, (woodsSpeed * playerSegment.curve * (position - startPosition)) / segmentLength, 1);
+    skyOffset = Util.increase(skyOffset, (skySpeed * playerSegment.curve * (position - startPosition)) / segmentLength, 1);
+    hillsOffset = Util.increase(hillsOffset, (hillsSpeed * playerSegment.curve * (position - startPosition)) / segmentLength, 1);
+    woodsOffset = Util.increase(woodsOffset, (woodsSpeed * playerSegment.curve * (position - startPosition)) / segmentLength, 1); 
 
-        if(keyLeft){
-           if(speed > 0){
+    if (keyLeft) {
+        if (speed > 0) {
             playerX -= dx;
-            if(hangTimer >= hangDelay) {
+            if (hangTimer >= hangDelay) {
                 hangTimer = 0;
                 hang -= 2;
                 hang = Util.limit(hang, -6, 0);
-            }else{
+            } else {
                 hangTimer += dt * 1000;
             }
         }
-        }else if(keyRight) {
-            if(speed > 0){
-                playerX = playerX + dx;
-                if(hangTimer >= hangDelay) {
-                    hangTimer = 0;
-                    hang += 2;
-                    hang = Util.limit(hang, 0, 6);
-                }else{
-                    hangTimer += dt * 1000;
-                }
+    } else if (keyRight) {
+        if (speed > 0) {
+            playerX = playerX + dx;
+            if (hangTimer >= hangDelay) {
+                hangTimer = 0;
+                hang += 2;
+                hang = Util.limit(hang, 0, 6);
+            } else {
+                hangTimer += dt * 1000;
+            }
         }
-    }else{
-        if(hang !== 0) {
-            if(hangTimer >= hangDelay || hangTimer === 0) {
+    } else {
+        if (hang !== 0) {
+            if (hangTimer >= hangDelay || hangTimer === 0) {
                 hangTimer = 0;
                 hang = hang < 0 ? hang + 2 : hang - 2;
 
@@ -148,31 +149,44 @@ window.addEventListener(
         }
     }
 
-        playerX = playerX - dx * speedPercent * playerSegment.curve * centrifugal
+    playerX = playerX - dx * speedPercent * playerSegment.curve * centrifugal
 
-        if(keySlower) {
-            speed = Util.accelerate(speed, breaking, dt);
-            brake = 14;
-        }else if (keyFaster) {
-            speed = Util.accelerate(speed, accel, dt);
-            brake = 0;
-        }else{
-            speed = Util.accelerate(speed, decel, dt);
-            brake = 0;
-        }
+    if (keySlower) {
+        speed = Util.accelerate(speed, breaking, dt);
+        brake = 14;
+    } else if (keyFaster) {
+        speed = Util.accelerate(speed, accel, dt);
+        brake = 0;
+    } else {
+        speed = Util.accelerate(speed, decel, dt);
+        brake = 0;
+    }
 
-        if((playerX < -1 || playerX > 1) && speed > offRoadLimit) {
-            speed = Util.accelerate(speed, offRoadDecel, dt);
-        } 
+    if ((playerX < -1 || playerX > 1) && speed > offRoadLimit) {
+        speed = Util.accelerate(speed, offRoadDecel, dt);
+    }
 
-        playerX = Util.limit(playerX, -2, 2);
-        speed = Util.limit(speed, 0, maxSpeed);
-        tire = Util.toInt(position / 500) % 2;
+    playerX = Util.limit(playerX, -2, 2);
+    speed = Util.limit(speed, 0, maxSpeed);
+    tire = Util.toInt(position / 500) % 2;
 
-        bikeSpriteSelector = 6 + tire + hang + brake;
-    };
+    bikeSpriteSelector = 6 + tire + hang + brake;
 
-   const render = () => {
+    round = trackLength / 300;
+    posistionplayer = position / 300;
+    if (posistionplayer > (round - 0.7)) {
+        lap++;
+    }
+    document.getElementById("laps").textContent = lap;
+    document.getElementById("speed").textContent = speed/100;
+
+    //     LapsTest = segments / segmentLength;
+    // console.log(LapsTest)
+    
+
+};
+
+const render = () => {
     let baseSegment = Segment.find(position);
     let basePercent = Util.percentRemaining(position, segmentLength);
     let playerSegment = Segment.find(position + playerZ);
@@ -182,45 +196,45 @@ window.addEventListener(
 
     let x = 0;
     let dx = -(baseSegment.curve * basePercent);
-    
+
     ctx.clearRect(0, 0, width, height);
 
-    Render.background(ctx, background, width, height, BACKGROUND.SKY, skyOffset, resolution * skySpeed * playerY);
+    Render.background(ctx, background, width, height, BACKGROUND.SKY, skyOffset);
     Render.background(ctx, background, width, height, BACKGROUND.HILLS, hillsOffset, resolution * hillsSpeed * playerY);
     Render.background(ctx, background, width, height, BACKGROUND.WOODS, woodsOffset, resolution * woodsSpeed * playerY);
-    
+
     let n, i, segment, car, sprite, spriteScale, spriteX, spriteY;
-    
+
     for (n = 0; n < drawDistance; n++) {
-     segment = segments[(baseSegment.index + n) % segments.length];
-     segment.looped = segment.index < baseSegment.index;
-     segment.fog = Util.exponentialFog(n / drawDistance, fogDensity);
-     segment.clip = maxy;
-     
-     Util.project(segment.p1, playerX * roadWidth - x, playerY + cameraHeight, position - (segment.looped ? trackLength : 0), cameraDepth, width, height, roadWidth);
-     
-     Util.project(segment.p2, playerX * roadWidth - x - dx, playerY + cameraHeight, position - (segment.looped ? trackLength : 0), cameraDepth, width, height, roadWidth);
-    
-     x = x + dx;
-     dx = dx + segment.curve;
-   
-     if(segment.p1.camera.z <= cameraDepth || // behind us
-        segment.p2.screen.y >= segment.p1.screen.y || // back face cull
-        segment.p2.screen.y >= maxy) { // clip by (already rendered) hill
-       continue;
-     }
-   
-     Render.segment(ctx, width, lanes, segment.p1.screen.x, segment.p1.screen.y, segment.p1.screen.w, segment.p2.screen.x, segment.p2.screen.y, segment.p2.screen.w, segment.fog, segment.color);
-     maxy = segment.p1.screen.y;
+        segment = segments[(baseSegment.index + n) % segments.length];
+        segment.looped = segment.index < baseSegment.index;
+        segment.fog = Util.exponentialFog(n / drawDistance, fogDensity);
+        segment.clip = maxy;
+
+        Util.project(segment.p1, playerX * roadWidth - x, playerY + cameraHeight, position - (segment.looped ? trackLength : 0), cameraDepth, width, height, roadWidth);
+
+        Util.project(segment.p2, playerX * roadWidth - x - dx, playerY + cameraHeight, position - (segment.looped ? trackLength : 0), cameraDepth, width, height, roadWidth);
+
+        x = x + dx;
+        dx = dx + segment.curve;
+
+        if (segment.p1.camera.z <= cameraDepth || // behind us
+            segment.p2.screen.y >= segment.p1.screen.y || // back face cull
+            segment.p2.screen.y >= maxy) { // clip by (already rendered) hill
+            continue;
+        }
+
+        Render.segment(ctx, width, lanes, segment.p1.screen.x, segment.p1.screen.y, segment.p1.screen.w, segment.p2.screen.x, segment.p2.screen.y, segment.p2.screen.w, segment.fog, segment.color);
+        maxy = segment.p1.screen.y;
     }
 
-    for(n=drawDistance-1; n>0; n--) {
+    for (n = drawDistance - 1; n > 0; n--) {
         segment = segments[(baseSegment.index + n) % segments.length];
         if (segment == playerSegment) {
             Render.player(ctx, width, height, resolution, roadWidth, sprites, speed / maxSpeed, cameraDepth / playerZ, width / 2, height / 2 - ((cameraDepth / playerZ) * Util.interpolate(playerSegment.p1.camera.y, playerSegment.p2.camera.y, playerPercent) * height) / 2); // speed * (keyLeft ? -1 : keyRight ? 1 : 0), playerSegment.p2.world.y - playerSegment.p1.world.y
-          }
+        }
 
     }
 
 
-   };
+};

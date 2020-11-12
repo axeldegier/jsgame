@@ -58,6 +58,7 @@ class Util {
          return 1 / (Math.pow(Math.E, (distance * distance * density)));               
          }
 
+         
     static increase(start, increment, max) { // with looping
       let result = start + increment;
       while (result >= max) result -= max;
